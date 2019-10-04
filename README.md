@@ -2,7 +2,7 @@
 
 1. Create a config file with all your path store and a class to use them as follow :
 
-"""config = {
+config = {
     'startpath': r'YOUR FILE PATH',
 
     'excel_file': {
@@ -24,4 +24,3 @@ class Config:
 
     def __repr__(self):
         return 'It works! <__maing__.Config at 0xblabla |||| %s' % self.startpath
-"""
