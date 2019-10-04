@@ -1,4 +1,4 @@
-""" Load DICOM files, view some metadata and plot images."""
+""" Load DICOM files, view some metadata needed."""
 
 import pydicom
 import os
@@ -30,11 +30,6 @@ class DCMMetaExtractor():
                 if file_path_dcm.endswith(".dcm"):
                     ds = pydicom.dcmread(file_path_dcm, force=True)
                     self.metadata = ds
-                    #print(self.ds.PatientSex)
-                    #print(file)
-                    #print(self.ds)
-                    #show_dcm_info(ds)
-                    #plot_pixel_array(ds)
 
                     self.li_dict.append(
                         {
@@ -62,14 +57,16 @@ class DCMMetaExtractor():
         if self.output_DF is None:
             print('Please generate your DataFrame first with <generate_dataframe> method !')
         else:
-            self.output_DF.to_csv()
+            self.output_DF.to_csv(self.param.savepath)
 
 
 
 if __name__ == '__main__':
 
-    mon_extractor = DCMMetaExtractor()
-    mon_extractor.generate_dataframe()
-    mon_extractor.metadata
-    print(mon_extractor.output_DF)
-    print(mon_extractor.li_dict)
+    mon_extractor = DCMAllMetaExtractor()
+    mon_extractor.dicom_dataset_to_dict()
+    #mon_extractor.metadata
+    print(mon_extractor.full_DF)
+    print(mon_extractor.dict_metadata)
+
+
