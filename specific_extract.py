@@ -47,11 +47,22 @@ class DCMMetaExtractor():
                             'imageMin': np.min(ds.pixel_array) if "pixel_array" in ds else None,
                             'imageMax': np.max(ds.pixel_array) if "pixel_array" in ds else None,
                             'imageMean': np.mean(ds.pixel_array) if "pixel_array" in ds else None,
+                            'Age': np.subtract(int(self.metadata.StudyDate[0:4]),
+                                               int(self.metadata.PatientBirthDate[0:4])) if "Age" in ds else None,
                             'SOURCE_FILE_PATH': file_path_dcm
                         }
                     )
 
         self.output_DF = pd.DataFrame(self.li_dict)
+
+    def add_columns(self):
+        """
+        This fonction will allow to add some specific custom columns to a dataframe.
+        :return:
+        """
+        self.output_DF['Age'] = self.output_DF.apply(lambda row: np.subtract(int(self.metadata.StudyDate[0:4])),
+                                                                             int(self.metadata.PatientBirthDate[0:4])),
+                                                    axis=1)
 
     def merge_patientID(self):
         """
@@ -68,9 +79,6 @@ class DCMMetaExtractor():
         Fonction to anonymize the dataframe after the merge manipulation on the patientID.
         :return:
         """
-
-
-
 
     def save_DF_as_csv(self):
         """
@@ -89,7 +97,7 @@ if __name__ == '__main__':
     mon_extractor.generate_dataframe()
     #mon_extractor.metadata
     print(mon_extractor.output_DF)
-    print(mon_extractor.dict_metadata)
+    print(mon_extractor.li_dict)
     #filter sur la valeur d'une colonne a = df[df.PatientSex == 'F']
 
 
