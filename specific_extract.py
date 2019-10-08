@@ -8,6 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 import sys
 from final.config import Config, config
+import altair as alt
 from final.modules.utils.displayinfo import show_dcm_info
 
 
@@ -17,6 +18,9 @@ class DCMMetaExtractor():
         self.output_DF = None
         self.li_dict = None
         self.metadata = None
+        self.df1 = None
+        self.df2 = None
+        self.df = None
 
     def generate_dataframe(self):
         """
@@ -49,6 +53,25 @@ class DCMMetaExtractor():
 
         self.output_DF = pd.DataFrame(self.li_dict)
 
+    def merge_patientID(self):
+        """
+        Fonction to merge our dataframe with our excel file in the aim to anonymize the database.
+        :return:
+        """
+        self.df1 = self.output_DF
+        self.df2 = pd.read_excel(self.param.excel_anonym)
+
+        self.df = self.df1.merge(self.df2, on='PatientID', how='inner')
+
+    def anonymize(self):
+        """
+        Fonction to anonymize the dataframe after the merge manipulation on the patientID.
+        :return:
+        """
+
+
+
+
     def save_DF_as_csv(self):
         """
         Fonction which after generate a dataframe will save it as a csv.
@@ -60,13 +83,15 @@ class DCMMetaExtractor():
             self.output_DF.to_csv(self.param.savepath)
 
 
-
 if __name__ == '__main__':
 
-    mon_extractor = DCMAllMetaExtractor()
-    mon_extractor.dicom_dataset_to_dict()
+    mon_extractor = DCMMetaExtractor()
+    mon_extractor.generate_dataframe()
     #mon_extractor.metadata
-    print(mon_extractor.full_DF)
+    print(mon_extractor.output_DF)
     print(mon_extractor.dict_metadata)
+    #filter sur la valeur d'une colonne a = df[df.PatientSex == 'F']
+
+
 
 
