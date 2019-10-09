@@ -55,14 +55,23 @@ class DCMMetaExtractor():
 
         self.output_DF = pd.DataFrame(self.li_dict)
 
-    def add_columns(self):
+    def date_format(self):
+        """
+        This fonction will convert existing date columns into a standart format to allow operation on it.
+        :return:
+        """
+        self.output_DF['PatientBirthDate'] = pd.to_datetime(self.output_DF['PatientBirthDate'], format='%Y%m%d')
+        self.output_DF['StudyDate'] = pd.to_datetime(self.output_DF['StudyDate'], format='%Y%m%d')
+        return self.output_DF
+
+    def add_df_age(self):
         """
         This fonction will allow to add some specific custom columns to a dataframe.
         :return:
         """
-        self.output_DF['Age'] = self.output_DF.apply(lambda row: np.subtract(int(self.metadata.StudyDate[0:4])),
-                                                                             int(self.metadata.PatientBirthDate[0:4])),
-                                                    axis=1)
+        days_in_year = 365.2425
+        self.output_DF['Age'] = int(self.output_DF['PatientBirthDate'] - self.output_DF['StudyDate'] / days_in_year)
+        return self.output_DF
 
     def merge_patientID(self):
         """
