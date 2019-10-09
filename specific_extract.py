@@ -21,6 +21,51 @@ class DCMMetaExtractor():
         self.df1 = None
         self.df2 = None
         self.df = None
+        self.df_rename = None
+
+    def rename_file(self):
+        """
+        Fonction to change the file name.
+        :return:
+        """
+        self.df_rename = pd.read_excel(self.param.excel_anonym)
+
+        for root, dirs, files in walk(self.param.startpath):
+            for file in files:
+                file_path_dcm = os.path.join(root, file)
+                if file_path_dcm.endswith(".dcm"):
+                    ds = pydicom.dcmread(file_path_dcm, force=True)
+                    self.metadata = ds
+
+                    for i in range(0, len(self.df_rename['PatientID'])-2):
+                        if self.df_rename.iloc[1][i] in self.metadata.PatientID:
+                            os.rename(self.df_rename.iloc[1][i])
+
+    def anonymize(self):
+        """
+        Fonction to anonymize the dataframe after the merge manipulation on the patientID.
+        :return:
+        """
+        for root, dirs, files in walk(self.param.startpath):
+            for file in files:
+                file_path_dcm = os.path.join(root, file)
+                if file_path_dcm.endswith(".dcm"):
+                    ds = pydicom.dcmread(file_path_dcm, force=True)
+                    self.metadata = ds
+                    ds.remove_private_tags()
+                    tag = ['PatientName', 'PatientBirthDate', 'PatientAddress', 'PerformingPhysicianName',
+                           'AttendingPhysicianName', 'InstitutionName', 'InstitutionAddress', 'InstitutionalDepartmentName',
+                           'ImageComments', 'ReferringPhysicianName', 'PerformingPhysicianName',
+                           'OriginalAttributesSequence', 'StudyTime', 'SeriesTime', 'AcquisitionTime', 'ImageTime',
+                           'NameOfPhysiciansReadingStudy', 'PhysiciansOfRecord', 'RequestingPhysician', 'AdmissionID', 'StudyID',
+                           'IssuerOfPatientID']
+                    for j in tag:
+                        if j in self.metadata:
+                            self.metadata.data_element(j).value = ''
+                            ap = os.path.join(root, file)
+                            self.metadata.save_as(ap)
+                            print(file)
+                            print(self.metadata)
 
     def generate_dataframe(self):
         """
@@ -39,7 +84,7 @@ class DCMMetaExtractor():
                         {
                             'PatientID': ds.PatientID if "PatientID" in ds else None,
                             'PatientBirthDate': ds.PatientBirthDate if "PatientBirthDate" in ds else None,
-                            'PatientSex': ds.PatientSex,
+                            'PatientSex': ds.PatientSex if "PatientSex" in ds else None,
                             'Modality': ds.Modality if "Modality" in ds else None,
                             'StudyDate': ds.StudyDate if "StudyDate" in ds else None,
                             'StudyDesc': ds.StudyDescription if "StudyDescription" in ds else None,
@@ -58,10 +103,13 @@ class DCMMetaExtractor():
     def date_format(self):
         """
         This fonction will convert existing date columns into a standart format to allow operation on it.
+        And to convert it into a string format.
         :return:
         """
         self.output_DF['PatientBirthDate'] = pd.to_datetime(self.output_DF['PatientBirthDate'], format='%Y%m%d')
+        self.output_DF['PatientBirthDate'].apply(lambda x: x.strftime('%Y%m%d'))
         self.output_DF['StudyDate'] = pd.to_datetime(self.output_DF['StudyDate'], format='%Y%m%d')
+        self.output_DF['StudyDate'].apply(lambda x: x.strftime('%Y%m%d'))
         return self.output_DF
 
     def add_df_age(self):
@@ -69,8 +117,9 @@ class DCMMetaExtractor():
         This fonction will allow to add some specific custom columns to a dataframe.
         :return:
         """
-        days_in_year = 365.2425
-        self.output_DF['Age'] = int(self.output_DF['PatientBirthDate'] - self.output_DF['StudyDate'] / days_in_year)
+        days_in_year = 365
+        self.output_DF['PatientBirthDate'] = self.output_DF['PatientBirthDate'].strftime('%Y%m%d')
+        self.output_DF['Age'] = self.output_DF['StudyDate'][0:4] - self.output_DF['PatientBirthDate'] / days_in_year
         return self.output_DF
 
     def merge_patientID(self):
@@ -82,12 +131,6 @@ class DCMMetaExtractor():
         self.df2 = pd.read_excel(self.param.excel_anonym)
 
         self.df = self.df1.merge(self.df2, on='PatientID', how='inner')
-
-    def anonymize(self):
-        """
-        Fonction to anonymize the dataframe after the merge manipulation on the patientID.
-        :return:
-        """
 
     def save_DF_as_csv(self):
         """
