@@ -36,10 +36,32 @@ class DCMMetaExtractor():
                 if file_path_dcm.endswith(".dcm"):
                     ds = pydicom.dcmread(file_path_dcm, force=True)
                     self.metadata = ds
+                    for i in range(0, len(self.df_rename['PatientID'])):
+                        print(i)
+                        if str(self.df_rename.iloc[i][1]) in self.metadata.PatientID:
+                            print(self.df_rename.iloc[i][1])
+                            print(self.metadata.PatientID)
+                            for j in range(0, 10, 1):
+                                if str(self.df_rename.iloc[i][2]+str(j)) not in file:
+                                    os.rename(file_path_dcm, os.path.join(root, self.df_rename.iloc[i][2])+str(j+1))
 
-                    for i in range(0, len(self.df_rename['PatientID'])-2):
-                        if self.df_rename.iloc[1][i] in self.metadata.PatientID:
-                            os.rename(self.df_rename.iloc[1][i])
+    def rename_dir(self):
+        """
+        Fonction to change the dir name.
+        :return:
+        """
+        for root, dirs, files in walk(self.param.startpath):
+            for file in files:
+                file_path_dcm = os.path.join(root, file)
+                if file_path_dcm.endswith(".dcm"):
+                    ds = pydicom.dcmread(file_path_dcm, force=True)
+                    self.metadata = ds
+                    for i in range(0, len(self.df_rename['PatientID'])):
+                        print(i)
+                        if str(self.df_rename.iloc[i][1]) in self.metadata.PatientID:
+                            for j in range(0, 10, 1):
+                                if str(self.df_rename.iloc[i][2]+str(j)) not in file:
+                                    os.rename(file_path_dcm, os.path.join(root, self.df_rename.iloc[i][2])+str(j+1))
 
     def anonymize(self):
         """
